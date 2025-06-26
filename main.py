@@ -10,10 +10,10 @@ import traceback
 
 import win32api
 # from win10toast_click import ToastNotifier
-from PySide2 import QtWidgets, QtCore, QtGui
+from PySide6 import QtWidgets, QtCore, QtGui
 
 from ui import mainWindow
-from database import VtDatabaseWeb
+from database import CinemaDatabase#VtDatabaseWeb
 import settings
 import config
 import perforce
@@ -87,17 +87,17 @@ class MainWindow(mainWindow.Window):
         self.p4cmd = None
         self.drag_pos = None
 
-        self.setWindowTitle(f"Visual Tech Apps {version.version}")
+        self.setWindowTitle(f"Cinema Apps {version.version}")
 
         icon = QtGui.QIcon(RESOURCE_DIR + "/icons/vt_logo_30.png")
         self.tray_icon = QtWidgets.QSystemTrayIcon(self)
         self.tray_icon.setIcon(icon)
         self.tray_icon.show()
-        self.tray_icon.setToolTip("VtLauncher")
+        self.tray_icon.setToolTip("Cinema Launcher")
         self.tray_icon.activated.connect(self.icon_activated)
 
-        self.open_action = QtWidgets.QAction("Open")
-        self.quit_action = QtWidgets.QAction("Quit")
+        self.open_action = QtGui.QAction("Open")
+        self.quit_action = QtGui.QAction("Quit")
         self.open_action.triggered.connect(self.show)
         self.quit_action.triggered.connect(QtWidgets.QApplication.quit)
 
@@ -110,10 +110,10 @@ class MainWindow(mainWindow.Window):
         self.tray_icon.setContextMenu(self.tray_icon_menu)
 
     def setup_ui(self):
-        self._update_check_thread = UpdateCheckThread()
+        # self._update_check_thread = UpdateCheckThread()
 
         # self.tray_icon = None
-        self._db = VtDatabaseWeb()
+        self._db = CinemaDatabase()
         self.project_manager.db = self._db
         self.config = config.get_config()
         self.commands = Commands()
@@ -130,7 +130,7 @@ class MainWindow(mainWindow.Window):
         self.installEventFilter(self)
         self.tab_index_changed()
 
-        self._update_check_thread.start()
+        # self._update_check_thread.start()
 
     def create_tray_icon(self):
         # Create the icon
@@ -143,8 +143,8 @@ class MainWindow(mainWindow.Window):
         if self.tray_icon.isSystemTrayAvailable():
             # self.tray_icon.setIcon(self.windowIcon())
             # Create the menu
-            open_action = QtWidgets.QAction("Open")
-            quit_action = QtWidgets.QAction("Quit")
+            open_action = QtGui.QAction("Open")
+            quit_action = QtGui.QAction("Quit")
             open_action.triggered.connect(self.show)
             quit_action.triggered.connect(QtWidgets.QApplication.quit)
 
@@ -174,7 +174,7 @@ class MainWindow(mainWindow.Window):
 
     @property
     def content_dir(self):
-        project = self.vtLauncher_widget.combobox_projects.currentText().split(" ")[0]
+        project = self.vtLauncher_widget.combobox_projects.currentText().rsplit(" (", 1)[0]
         project_data = self._db.get_project_data(project)
         path = project_data["content_path"].replace("//", self.p4cmd.get_workspace()["depot"] + "/")
         # print(path)
@@ -182,7 +182,7 @@ class MainWindow(mainWindow.Window):
 
     @property
     def resource_dir(self):
-        project = self.vtLauncher_widget.combobox_projects.currentText().split(" ")[0]
+        project = self.vtLauncher_widget.combobox_projects.currentText().rsplit(" (", 1)[0]
         project_data = self._db.get_project_data(project)
         path = project_data["resource_path"].replace("//", self.p4cmd.get_workspace()["resource"] + "/")
         # print(path)
@@ -190,7 +190,7 @@ class MainWindow(mainWindow.Window):
 
     def connect_signals(self):
         self.stacked_widget.currentChanged.connect(self.tab_index_changed)
-        self._update_check_thread.update_que.connect(self.update_app)
+        # self._update_check_thread.update_que.connect(self.update_app)
 
     def connect_btn_signals(self):
         self.btn_close.clicked.connect(self.close_ui)
@@ -295,7 +295,7 @@ class MainWindow(mainWindow.Window):
         self.project_manager.show_finished_checkbox.setChecked(self.config.get("ShowFinished_PRM", False))
         if not self.config["Settings"]["EngineRoot"]:
             self.config["Settings"]["EngineRoot"] = self.get_engine_path("4.27")
-        self.project_manager.update_project_info()
+        # self.project_manager.update_project_info()
         self.settings_widget.set_ui(self.config)
         # self.check_permission()
 
@@ -356,7 +356,7 @@ class MainWindow(mainWindow.Window):
 
     def update_projects(self):
         include_finished_vtl = self.vtLauncher_widget.show_finished_checkbox.isChecked()
-        projects: dict = self._db.get_projects(include_finished_vtl)
+        projects = self._db.get_projects(include_finished_vtl)
         if projects:
             # model = QtGui.QStandardItemModel(0, 1)
             # for project_name, object_id in projects.items():
@@ -368,17 +368,17 @@ class MainWindow(mainWindow.Window):
             # self.vtLauncher_widget.combobox_projects.setModel(model)
             # self.project_manager.combobox_projects.setModel(model)
             self.vtLauncher_widget.combobox_projects.clear()
-            self.vtLauncher_widget.combobox_projects.addItems(projects.keys())
+            self.vtLauncher_widget.combobox_projects.addItems(projects)
 
         include_finished_prm = self.project_manager.show_finished_checkbox.isChecked()
-        projects: dict = self._db.get_projects(include_finished_prm)
+        projects = self._db.get_projects(include_finished_prm)
         if projects:
             self.project_manager.combobox_projects.clear()
-            self.project_manager.combobox_projects.addItems(projects.keys())
+            self.project_manager.combobox_projects.addItems(projects)
 
     def doit(self):
         sender = self.sender()
-        project = self.vtLauncher_widget.combobox_projects.currentText().split(" ")[0]
+        project = self.vtLauncher_widget.combobox_projects.currentText().rsplit(" (", 1)[0]
         project_data = self._db.get_project_data(project)
         # resource_path = project_data["resource_path"].replace("//Resource", self.p4cmd.get_workspace()["Resource"])
         # content_path = project_data["content_path"].replace("//depot", self.p4cmd.get_workspace()["depot"])
@@ -422,43 +422,43 @@ if __name__ == "__main__":
     lock_file = QtCore.QLockFile(QtCore.QDir.tempPath() + "/vtlauncher.lock")
 
     try:
-        if lock_file.tryLock():
+        if lock_file.tryLock(0):
             vt_launcher_ui = MainWindow()
 
-            splash_pix = QtGui.QPixmap(RESOURCE_DIR + "/VT_Logo.png")
+            # splash_pix = QtGui.QPixmap(RESOURCE_DIR + "/VT_Logo.png")
 
-            splash = QtWidgets.QSplashScreen(splash_pix)
-            splash.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
-            splash.setEnabled(False)
-            # adding progress bar
-            progressBar = QtWidgets.QProgressBar(splash)
-            progressBar.setMaximum(10)
-            progressBar.setGeometry(130, splash_pix.height() - 100, splash_pix.width() - 250, 20)
-            progressBar.setStyleSheet("QProgressBar::chunk"
-                                      "{"
-                                      "background-color: red;"
-                                      "}")
+            # splash = QtWidgets.QSplashScreen(splash_pix)
+            # splash.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+            # splash.setEnabled(False)
+            # # adding progress bar
+            # progressBar = QtWidgets.QProgressBar(splash)
+            # progressBar.setMaximum(10)
+            # progressBar.setGeometry(130, splash_pix.height() - 100, splash_pix.width() - 250, 20)
+            # progressBar.setStyleSheet("QProgressBar::chunk"
+            #                           "{"
+            #                           "background-color: red;"
+            #                           "}")
 
-            splash.setMask(splash_pix.mask())
+            # splash.setMask(splash_pix.mask())
 
-            splash.show()
+            # splash.show()
 
-            for i in range(1, 11):
-                progressBar.setValue(i)
-                t = time.time()
-                while time.time() < t + 0.1:
-                    app.processEvents()
+            # for i in range(1, 11):
+            #     progressBar.setValue(i)
+            #     t = time.time()
+            #     while time.time() < t + 0.1:
+            #         app.processEvents()
 
-            # Simulate something that takes time
-            time.sleep(1)
+            # # Simulate something that takes time
+            # time.sleep(1)
 
-            splash.finish(vt_launcher_ui)
+            # splash.finish(vt_launcher_ui)
 
             vt_launcher_ui.show()
             vt_launcher_ui.resize(500, 500)
             vt_launcher_ui.setup_ui()
             # vt_launcher_ui.update_cls = update.Update(parent_window=vt_launcher_ui)
-            sys.exit(app.exec_())
+            sys.exit(app.exec())
         else:
             error_message = QtWidgets.QMessageBox()
             error_message.setIcon(QtWidgets.QMessageBox.Warning)

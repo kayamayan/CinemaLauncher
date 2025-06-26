@@ -30,7 +30,7 @@ class ProjectManager(ProjectManagerWidget):
         engines = self.get_installed_engines()
         engine_list = list(engines)
         if not engine_list:
-            engine_list = ["UE_4.26", "UE_4.27", "UE_5.0"]
+            engine_list = ["UE_5.4", "UE_5.5", "UE_5.6",]
         self.comboBox_engine_version.clear()
         self.comboBox_engine_version.addItems(engine_list)
         self.le_project_name.setText(self.project_info["name"])
@@ -38,7 +38,7 @@ class ProjectManager(ProjectManagerWidget):
         self.comboBox_engine_version.setCurrentText(self.project_info.get("engine_version", ""))
         self.le_content_path.setText(self.project_info.get("content_path", ""))
         self.le_resource_path.setText(self.project_info.get("resource_path", ""))
-        self.checkbox_finished.setChecked(eval(self.project_info.get("finished", "False")))
+        self.checkbox_finished.setChecked(self.project_info.get("finished", False))
 
     def connect_signals(self):
         self.combobox_projects.currentIndexChanged.connect(self.update_project_info)
@@ -55,7 +55,8 @@ class ProjectManager(ProjectManagerWidget):
         self.new_project_button.clicked.disconnect()
 
     def update_project_info(self):
-        current_project = self.combobox_projects.currentText().split(" ")[0]
+        # current_project = self.combobox_projects.currentText().split(" ")[0]
+        current_project = self.combobox_projects.currentText().rsplit(" (", 1)[0]
         project_info = self.db.get_project_data(current_project)
         self.project_info = project_info
         if project_info:
@@ -82,18 +83,22 @@ class ProjectManager(ProjectManagerWidget):
         self.new_project_button.clicked.connect(self.create_new_project)
 
     def update_project_data(self, delete=""):
-        if delete == "delete":
-            result = self.question_widget("프로젝트를 삭제 하시겠습니까?")
-            if not result:
-                return
-        self.project_info.update({"delete": delete})
+        # self.project_info.update({"delete": delete})
         self.project_info.update({"name": self.le_project_name.text()})
         self.project_info.update({"name_korean": self.le_project_name_korean.text()})
         self.project_info.update({"engine_version": self.comboBox_engine_version.currentText()})
         self.project_info.update({"content_path": self.le_content_path.text()})
         self.project_info.update({"resource_path": self.le_resource_path.text()})
         self.project_info.update({"finished": self.checkbox_finished.isChecked()})
-        resp = Commands().save_project(self.project_info)
+
+        if delete == "delete":
+            result = self.question_widget("프로젝트를 삭제 하시겠습니까?")
+            if not result:
+                return
+            resp = Commands().delete_project(self.project_info)
+        else:
+            resp = Commands().save_project(self.project_info)
+        
         if resp:
             self.del_project_button.setEnabled(True)
             self.del_project_button.setText("프로젝트 삭제")

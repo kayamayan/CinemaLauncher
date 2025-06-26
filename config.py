@@ -3,7 +3,7 @@ import json
 import logging
 import subprocess
 
-CONFIG_FILE = os.environ["APPDATA"].replace("\\", "/") + "/visual_tech/VtLauncher/config/VtLauncher.json"
+CONFIG_FILE = os.environ["APPDATA"].replace("\\", "/") + "/CinemaStudio/CinemaLauncher/config/CinemaLauncher.json"
 
 CONFIG = {
     "Project": None,

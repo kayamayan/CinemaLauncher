@@ -4,12 +4,12 @@
 # licensing of 'C:/Users/kayamayan.NC-KOREA/Documents/visual_tech/apps/VtLauncher/ui/VtLauncherWidget.ui' applies.
 #
 # Created: Mon Apr 18 11:02:29 2022
-#      by: pyside2-uic  running on PySide2 5.12.5
+#      by: PySide6-uic  running on PySide6 5.12.5
 #
 # WARNING! All changes made in this file will be lost!
 
 import os
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 RESOURCE_DIR = CURRENT_DIR + "/resource"

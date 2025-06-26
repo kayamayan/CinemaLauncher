@@ -1,7 +1,7 @@
 import os
 import sys
 import win32api
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide6 import QtCore, QtWidgets, QtGui
 
 CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 RESOURCE_DIR = CURRENT_DIR + "/resource"

@@ -1,14 +1,14 @@
 import os
 import subprocess
 
-from database import VtDatabaseWeb
+from database import CinemaDatabase
 
 CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 
 
 class Commands:
     def __init__(self):
-        self.db = VtDatabaseWeb()
+        self.db = CinemaDatabase()
 
     def launch(self, engine, project, raytracing):
         subprocess.Popen([engine, project, raytracing], stdin=None, stdout=None, stderr=None, close_fds=True)
@@ -30,7 +30,7 @@ class Commands:
         subprocess.Popen(fr'explorer "{directory}"')
 
     def save_project(self, data: dict):
-        return self.db.update_project_db(data)
+        return self.db.update_project(data)
 
-    def delete_project(self, data: dict):
-        return self.db.update_project_db(data)
+    def delete_project(self, data):
+        return self.db.delete_project(data)

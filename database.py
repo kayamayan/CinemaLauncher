@@ -2,10 +2,10 @@
 from pymongo import MongoClient, ReturnDocument
 
 import json
-# from bson import ObjectId
+from bson import ObjectId
 from urllib import parse, request
 
-import user
+# import user
 
 
 class VtDatabaseWeb:
@@ -49,35 +49,46 @@ class VtDatabaseWeb:
         return result
 
 
-class VtDatabase:
+class CinemaDatabase:
     def __init__(self):
         self.client = self.connect_db()
-        self.main_db = self.client.maindb
-        self.project_collection = self.main_db.projects
+        self.cinema_common = self.client.cinema_common
+        self.project_collection = self.cinema_common.projects
 
     def connect_db(self):
-        client = MongoClient("172.19.217.80",
-                             username=user.get_user(),
-                             password=user.get_password(),
-                             authSource='admin')
+        uri = "mongodb+srv://toribro:Pass_Word_01@cinemadb.ulcqb.mongodb.net/?retryWrites=true&w=majority&appName=CinemaDB"
+        client = MongoClient(uri)
         return client
 
     def insert_db(self, data):
         result = self.project_collection.insert_one(data)
 
-    def update_project(self, project, data):
+    def update_project(self, data):
         self.project_collection.update_one(
-            {'name': project},
+            {'_id': data["_id"]},
             {'$set': data},
             upsert=True
         )
+        return True
 
-    def get_projects(self):
-        projects_data = self.project_collection.find({}, {"name_korean": 1, "engine_version": 1})
-        projects = [i["name_korean"] + " (" + i["engine_version"] + ")" for i in projects_data]
+    def delete_project(self, data):
+        self.project_collection.delete_one({'_id': data["_id"]})
+
+    def get_projects(self, include_finished):
+        projects_data = self.project_collection.find({}, {"name_korean": 1, "engine_version": 1, "finished": 1})
+        projects = []
+        for i in projects_data:
+            if not include_finished and not i.get("finished", "False"): # 미완료 프로젝트
+                projects.append(i["name_korean"] + " (" + i["engine_version"] + ")")
+            elif include_finished and i.get("finished", "False"):
+                projects.append(i["name_korean"] + " (" + i["engine_version"] + ")")
         return projects
 
     def get_project_data(self, project):
-        data = self.project_collection.find({'name_korean': project},
-                                            {"content_path": 1, "engine_version": 1, "resource_path": 1, "name": 1})
-        return data
+        datas = self.project_collection.find({'name_korean': project},
+                                            {"content_path": 1, "engine_version": 1, "resource_path": 1, "name": 1, "name_korean": 1, "finished": 1})
+        result = {}
+        for data in datas:
+            for k, v in data.items():
+                result.update({k: v})
+        return result

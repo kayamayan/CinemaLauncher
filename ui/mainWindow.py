@@ -4,12 +4,12 @@
 # licensing of 'C:/Users/kayamayan.NC-KOREA/Documents/visual_tech/apps/VtLauncher/ui/mainWindow.ui' applies.
 #
 # Created: Mon Apr 18 11:02:20 2022
-#      by: pyside2-uic  running on PySide2 5.12.5
+#      by: PySide6-uic  running on PySide6 5.12.5
 #
 # WARNING! All changes made in this file will be lost!
 
 import os
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .VtLauncherWidget import VtLauncherWidget
 from projectManager import ProjectManager
@@ -161,7 +161,7 @@ class Window(QtWidgets.QMainWindow):
         self.left_menu_layout.setObjectName("verticalLayout_5")
 
         self.tab_vtlauncher_button = QtWidgets.QPushButton(self.frame_left_menu)
-        self.tab_vtlauncher_button.setText("VtLauncher")
+        self.tab_vtlauncher_button.setText("Cinema Launcher")
         self.tab_vtlauncher_button.setFont(font)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         size_policy.setHorizontalStretch(0)

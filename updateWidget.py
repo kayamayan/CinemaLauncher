@@ -6,7 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 import os
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 RESOURCE_DIR = CURRENT_DIR + "/resource"
