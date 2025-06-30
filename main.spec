@@ -23,7 +23,7 @@ a = Analysis(
 				   'pymongo',
 				   'json',
 				   'win32api'],
-    hookspath=[],
+    hookspath=['F:\\gitRepos\\CinemaLauncher\\venv\\Lib\\site-packages\\pyupdater\\hooks'],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],

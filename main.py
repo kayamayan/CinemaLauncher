@@ -2,15 +2,19 @@
 """
 
 """
+import sys
 import time
 import os
 import winreg
 import socket
 import traceback
 
-import win32api
+# import win32api
 # from win10toast_click import ToastNotifier
 from PySide6 import QtWidgets, QtCore, QtGui
+
+from pyupdater.client import Client, AppUpdate
+from client_config import ClientConfig 
 
 from ui import mainWindow
 from database import CinemaDatabase#VtDatabaseWeb
@@ -26,6 +30,24 @@ CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 RESOURCE_DIR = CURRENT_DIR + "/ui/resource"
 
 os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+
+
+__version__ = "1.0.0"   # ★ 현재 앱 버전 (차후 업데이트마다 숫자만 올리면 됨)
+
+def check_update():
+    # 2) ClientConfig 인스턴스를 Client 에 건네준다
+    client = Client(ClientConfig(), refresh=True)    # ← 인자 없이 () 로만 생성
+    update: AppUpdate | None = client.update_check(
+        ClientConfig.APP_NAME,   # 앱 이름
+        __version__              # 현재 버전
+    )
+
+    # 3) 새 버전이 있으면 다운로드 → 추출 후 재시작
+    if update:
+        update.download()                # progress_cb 파라미터도 가능
+        if update.is_downloaded():
+            update.extract_restart()     # 새 exe 교체 & 재실행
+            sys.exit()
 
 
 class UpdateCheckThread(QtCore.QThread):
@@ -207,51 +229,51 @@ class MainWindow(mainWindow.Window):
         self.vtLauncher_widget.btn_open_content.clicked.connect(lambda x: Commands.open_contents(self.content_dir))
         self.vtLauncher_widget.btn_open_resource.clicked.connect(lambda x: Commands.open_resource(self.resource_dir))
 
-    def update_clicked(self):
-        if getattr(sys, 'frozen', False):
-            application_path = os.path.dirname(sys.executable)
-        else:
-            application_path = CURRENT_DIR
+    # def update_clicked(self):
+    #     if getattr(sys, 'frozen', False):
+    #         application_path = os.path.dirname(sys.executable)
+    #     else:
+    #         application_path = CURRENT_DIR
 
-        win32api.ShellExecute(0, None,
-                              '\\\\cinemaserver\\Tcinema\\VTLIB\\global\\Python39\\python.exe',
-                              fr"{application_path}\update.py",
-                              None, 1)
-        self.close_ui()
+    #     win32api.ShellExecute(0, None,
+    #                           '\\\\cinemaserver\\Tcinema\\VTLIB\\global\\Python39\\python.exe',
+    #                           fr"{application_path}\update.py",
+    #                           None, 1)
+    #     self.close_ui()
 
-    @QtCore.Slot(bool)
-    def update_app(self, que):
-        if self._update_message_box:
-            self._update_message_box.close()
-        if que:
-            # self._toaster.show_toast(
-            #     "VtLauncher 새로운 버전이 있습니다.",
-            #     "클릭하면 업데이트를 진행합니다.",
-            #     icon_path=None,  # 'icon_path'
-            #     duration=5,
-            #     # for how many seconds toast should be visible; None = leave notification in Notification Center
-            #     threaded=True,
-            #     # True = run other code in parallel; False = code execution will wait till notification disappears
-            #     callback_on_click=self.update_clicked
-            # )
-            self._update_message_box = QtWidgets.QMessageBox()
-            self._update_message_box.setWindowTitle("Software Update")
-            self._update_message_box.setText("A new version of VtLauncher is available.\nWould you like to update?")
-            self._update_message_box.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            self._update_message_box.setDefaultButton(QtWidgets.QMessageBox.Yes)
-            message = self._update_message_box.exec_()
+    # @QtCore.Slot(bool)
+    # def update_app(self, que):
+    #     if self._update_message_box:
+    #         self._update_message_box.close()
+    #     if que:
+    #         # self._toaster.show_toast(
+    #         #     "VtLauncher 새로운 버전이 있습니다.",
+    #         #     "클릭하면 업데이트를 진행합니다.",
+    #         #     icon_path=None,  # 'icon_path'
+    #         #     duration=5,
+    #         #     # for how many seconds toast should be visible; None = leave notification in Notification Center
+    #         #     threaded=True,
+    #         #     # True = run other code in parallel; False = code execution will wait till notification disappears
+    #         #     callback_on_click=self.update_clicked
+    #         # )
+    #         self._update_message_box = QtWidgets.QMessageBox()
+    #         self._update_message_box.setWindowTitle("Software Update")
+    #         self._update_message_box.setText("A new version of VtLauncher is available.\nWould you like to update?")
+    #         self._update_message_box.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+    #         self._update_message_box.setDefaultButton(QtWidgets.QMessageBox.Yes)
+    #         message = self._update_message_box.exec_()
 
-            if message == QtWidgets.QMessageBox.Yes:
-                if getattr(sys, 'frozen', False):
-                    application_path = os.path.dirname(sys.executable)
-                else:
-                    application_path = CURRENT_DIR
+    #         if message == QtWidgets.QMessageBox.Yes:
+    #             if getattr(sys, 'frozen', False):
+    #                 application_path = os.path.dirname(sys.executable)
+    #             else:
+    #                 application_path = CURRENT_DIR
 
-                win32api.ShellExecute(0, None,
-                                      '\\\\cinemaserver\\Tcinema\\VTLIB\\global\\Python39\\python.exe',
-                                      fr"{application_path}\update.py",
-                                      None, 1)
-                self.close_ui()
+    #             win32api.ShellExecute(0, None,
+    #                                   '\\\\cinemaserver\\Tcinema\\VTLIB\\global\\Python39\\python.exe',
+    #                                   fr"{application_path}\update.py",
+    #                                   None, 1)
+    #             self.close_ui()
 
     def mousePressEvent(self, event):
         # SET DRAG POS WINDOW
@@ -423,6 +445,7 @@ if __name__ == "__main__":
 
     try:
         if lock_file.tryLock(0):
+            check_update()
             vt_launcher_ui = MainWindow()
 
             # splash_pix = QtGui.QPixmap(RESOURCE_DIR + "/VT_Logo.png")
