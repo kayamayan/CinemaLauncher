@@ -2,19 +2,15 @@
 """
 
 """
+__version__ = "1.0.0"
+
+from auto_updater import check_for_updates
 import sys
-import time
 import os
 import winreg
 import socket
-import traceback
 
-# import win32api
-# from win10toast_click import ToastNotifier
 from PySide6 import QtWidgets, QtCore, QtGui
-
-from pyupdater.client import Client, AppUpdate
-from client_config import ClientConfig 
 
 from ui import mainWindow
 from database import CinemaDatabase#VtDatabaseWeb
@@ -22,7 +18,6 @@ import settings
 import config
 import perforce
 from commands import Commands
-import version
 
 # import update
 
@@ -30,70 +25,6 @@ CURRENT_DIR = os.path.dirname(__file__).replace("\\", '/')
 RESOURCE_DIR = CURRENT_DIR + "/ui/resource"
 
 os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
-
-
-__version__ = "1.0.0"   # ★ 현재 앱 버전 (차후 업데이트마다 숫자만 올리면 됨)
-
-def check_update():
-    # 2) ClientConfig 인스턴스를 Client 에 건네준다
-    client = Client(ClientConfig(), refresh=True)    # ← 인자 없이 () 로만 생성
-    update: AppUpdate | None = client.update_check(
-        ClientConfig.APP_NAME,   # 앱 이름
-        __version__              # 현재 버전
-    )
-
-    # 3) 새 버전이 있으면 다운로드 → 추출 후 재시작
-    if update:
-        update.download()                # progress_cb 파라미터도 가능
-        if update.is_downloaded():
-            update.extract_restart()     # 새 exe 교체 & 재실행
-            sys.exit()
-
-
-class UpdateCheckThread(QtCore.QThread):
-    update_que = QtCore.Signal(bool)
-    version = None
-
-    def __init__(self):
-        QtCore.QThread.__init__(self)
-        # self.working = True
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        delay = 60
-        next_time = time.time()
-        while True:
-            time.sleep(max(0, next_time - time.time()))
-            try:
-                import importlib.util
-                spec = importlib.util.spec_from_file_location("module.name",
-                                                              r"\\cinemaserver\Tcinema\VTLIB\apps\VtLauncher\version.py")
-                version_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(version_module)
-                major, minor, patch = version_module.version_info
-                # major, minor, patch = (2, 0, 0)
-                self.version = version_module.version
-                cur_major, cur_minor, cur_patch = version.version_info
-                if major > cur_major:
-                    self.update_que.emit(True)
-                elif major == cur_major and minor > cur_minor:
-                    self.update_que.emit(True)
-                elif major == cur_major and minor == cur_minor and patch > cur_patch:
-                    self.update_que.emit(True)
-            except Exception:
-                traceback.print_exc()
-                # in production code you might want to have this instead of course:
-                # logger.exception("Problem while executing repetitive task.")
-            # skip tasks if we are behind schedule:
-            next_time += (time.time() - next_time) // delay * delay + delay
-
-    def stop(self):
-        self.terminate()
-        # self.working = False
-        # self.quit()
-        # self.wait()
 
 
 class MainWindow(mainWindow.Window):
@@ -109,27 +40,27 @@ class MainWindow(mainWindow.Window):
         self.p4cmd = None
         self.drag_pos = None
 
-        self.setWindowTitle(f"Cinema Apps {version.version}")
+        self.setWindowTitle(f"Cinema Apps {__version__}")
 
-        icon = QtGui.QIcon(RESOURCE_DIR + "/icons/vt_logo_30.png")
-        self.tray_icon = QtWidgets.QSystemTrayIcon(self)
-        self.tray_icon.setIcon(icon)
-        self.tray_icon.show()
-        self.tray_icon.setToolTip("Cinema Launcher")
-        self.tray_icon.activated.connect(self.icon_activated)
+        # icon = QtGui.QIcon(RESOURCE_DIR + "/icons/vt_logo_30.png")
+        # self.tray_icon = QtWidgets.QSystemTrayIcon(self)
+        # self.tray_icon.setIcon(icon)
+        # self.tray_icon.show()
+        # self.tray_icon.setToolTip("Cinema Launcher")
+        # self.tray_icon.activated.connect(self.icon_activated)
 
-        self.open_action = QtGui.QAction("Open")
-        self.quit_action = QtGui.QAction("Quit")
-        self.open_action.triggered.connect(self.show)
-        self.quit_action.triggered.connect(QtWidgets.QApplication.quit)
+        # self.open_action = QtGui.QAction("Open")
+        # self.quit_action = QtGui.QAction("Quit")
+        # self.open_action.triggered.connect(self.show)
+        # self.quit_action.triggered.connect(QtWidgets.QApplication.quit)
 
-        self.tray_icon_menu = QtWidgets.QMenu(self)
-        self.tray_icon_menu.addAction(self.open_action)
-        self.tray_icon_menu.addSeparator()
-        self.tray_icon_menu.addAction(self.quit_action)
+        # self.tray_icon_menu = QtWidgets.QMenu(self)
+        # self.tray_icon_menu.addAction(self.open_action)
+        # self.tray_icon_menu.addSeparator()
+        # self.tray_icon_menu.addAction(self.quit_action)
 
-        # Add the menu to the tray
-        self.tray_icon.setContextMenu(self.tray_icon_menu)
+        # # Add the menu to the tray
+        # self.tray_icon.setContextMenu(self.tray_icon_menu)
 
     def setup_ui(self):
         # self._update_check_thread = UpdateCheckThread()
@@ -284,8 +215,8 @@ class MainWindow(mainWindow.Window):
         QtCore.QCoreApplication.instance().quit()
 
     def closeEvent(self, event):
-        event.ignore()
-        self._hide_main_window()
+        # event.ignore()
+        # self._hide_main_window()
         self.save_settings()
 
     def _hide_main_window(self, _=''):
@@ -439,55 +370,55 @@ if __name__ == "__main__":
         app = QtWidgets.QApplication(sys.argv)
     else:
         app = QtWidgets.QApplication.instance()
-    app.setQuitOnLastWindowClosed(False)
+    # app.setQuitOnLastWindowClosed(False)
 
-    lock_file = QtCore.QLockFile(QtCore.QDir.tempPath() + "/vtlauncher.lock")
+    # lock_file = QtCore.QLockFile(QtCore.QDir.tempPath() + "/vtlauncher.lock")
 
-    try:
-        if lock_file.tryLock(0):
-            check_update()
-            vt_launcher_ui = MainWindow()
+    # try:
+    # if lock_file.tryLock(0):
+    check_for_updates(__version__)
+    vt_launcher_ui = MainWindow()
 
-            # splash_pix = QtGui.QPixmap(RESOURCE_DIR + "/VT_Logo.png")
+    # splash_pix = QtGui.QPixmap(RESOURCE_DIR + "/VT_Logo.png")
 
-            # splash = QtWidgets.QSplashScreen(splash_pix)
-            # splash.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
-            # splash.setEnabled(False)
-            # # adding progress bar
-            # progressBar = QtWidgets.QProgressBar(splash)
-            # progressBar.setMaximum(10)
-            # progressBar.setGeometry(130, splash_pix.height() - 100, splash_pix.width() - 250, 20)
-            # progressBar.setStyleSheet("QProgressBar::chunk"
-            #                           "{"
-            #                           "background-color: red;"
-            #                           "}")
+    # splash = QtWidgets.QSplashScreen(splash_pix)
+    # splash.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+    # splash.setEnabled(False)
+    # # adding progress bar
+    # progressBar = QtWidgets.QProgressBar(splash)
+    # progressBar.setMaximum(10)
+    # progressBar.setGeometry(130, splash_pix.height() - 100, splash_pix.width() - 250, 20)
+    # progressBar.setStyleSheet("QProgressBar::chunk"
+    #                           "{"
+    #                           "background-color: red;"
+    #                           "}")
 
-            # splash.setMask(splash_pix.mask())
+    # splash.setMask(splash_pix.mask())
 
-            # splash.show()
+    # splash.show()
 
-            # for i in range(1, 11):
-            #     progressBar.setValue(i)
-            #     t = time.time()
-            #     while time.time() < t + 0.1:
-            #         app.processEvents()
+    # for i in range(1, 11):
+    #     progressBar.setValue(i)
+    #     t = time.time()
+    #     while time.time() < t + 0.1:
+    #         app.processEvents()
 
-            # # Simulate something that takes time
-            # time.sleep(1)
+    # # Simulate something that takes time
+    # time.sleep(1)
 
-            # splash.finish(vt_launcher_ui)
+    # splash.finish(vt_launcher_ui)
 
-            vt_launcher_ui.show()
-            vt_launcher_ui.resize(500, 500)
-            vt_launcher_ui.setup_ui()
-            # vt_launcher_ui.update_cls = update.Update(parent_window=vt_launcher_ui)
-            sys.exit(app.exec())
-        else:
-            error_message = QtWidgets.QMessageBox()
-            error_message.setIcon(QtWidgets.QMessageBox.Warning)
-            error_message.setWindowTitle("Error")
-            error_message.setText("The application is already running!")
-            error_message.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            error_message.exec()
-    finally:
-        lock_file.unlock()
+    vt_launcher_ui.show()
+    vt_launcher_ui.resize(500, 500)
+    vt_launcher_ui.setup_ui()
+    # vt_launcher_ui.update_cls = update.Update(parent_window=vt_launcher_ui)
+    sys.exit(app.exec())
+    # else:
+    #     error_message = QtWidgets.QMessageBox()
+    #     error_message.setIcon(QtWidgets.QMessageBox.Warning)
+    #     error_message.setWindowTitle("Error")
+    #     error_message.setText("The application is already running!")
+    #     error_message.setStandardButtons(QtWidgets.QMessageBox.Ok)
+    #     error_message.exec()
+    # finally:
+    #     lock_file.unlock()
